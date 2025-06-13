@@ -1,0 +1,109 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          UserRole  @default(CUSTOMER)
+  isActive      Boolean   @default(true)
+  subscription  Subscription?
+  messages      Message[]
+  sessions      WorkoutSession[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Workout {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  videoUrl    String
+  thumbnail   String?
+  duration    Int       // in minutes
+  difficulty  String
+  type        String
+  isLive      Boolean   @default(false)
+  sessions    WorkoutSession[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model WorkoutSession {
+  id        String   @id @default(cuid())
+  workout   Workout  @relation(fields: [workoutId], references: [id])
+  workoutId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  startTime DateTime
+  endTime   DateTime
+  status    SessionStatus @default(SCHEDULED)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  plan      PlanType
+  status    SubscriptionStatus
+  startDate DateTime
+  endDate   DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  from      User     @relation(fields: [fromId], references: [id])
+  fromId    String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  imageUrl    String
+  amazonUrl   String
+  category    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  TRAINER
+  CUSTOMER
+}
+
+enum PlanType {
+  BASIC
+  PREMIUM
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+} 
